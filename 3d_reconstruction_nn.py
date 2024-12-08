@@ -11,6 +11,10 @@ from tensorflow.keras.layers import Dense, Flatten, Input
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import trimesh
+from pyemd import emd
+from scipy.spatial.distance import cdist
+
+from evaluation_functions import chamfer_distance, intersection_over_union, earth_movers_distance, hausdorff_distance, normalize_point_cloud
 
 def load_image(img_path, target_size=(64, 64)):
     """
@@ -130,13 +134,33 @@ def save_to_ply(points, output_file="output.ply"):
         for point in points:
             f.write(f"{point[0]} {point[1]} {point[2]}\n")
 
+def load_3d_points_for_test(keypoints_file):
+    if os.path.exists(keypoints_file):
+            keypoints = np.loadtxt(keypoints_file)  # loads data from a text file; returns an array containing data from the text file
+
+            expected_num_points = 50  # expected number of 3D points (e.g., 100) [can include in given variables]
+            if keypoints.ndim == 1: # Falls die Daten flach geladen werden
+                keypoints = keypoints.reshape(-1, 3) # Umformen zu (n, 3)
+            
+            if len(keypoints) < expected_num_points: # Pad with zeros if there are fewer points than expected
+                padding = np.zeros((expected_num_points - len(keypoints), keypoints.shape[1]))
+                keypoints = np.vstack([keypoints, padding])#
+            elif len(keypoints) > expected_num_points: # Truncate if there are more points than expected
+                keypoints = keypoints[:expected_num_points]
+            
+            return keypoints.flatten()  # Flatten des Arrays
+
 
 # Hauptblock zum Ausführen des Codes
 if __name__ == "__main__":
     image_folder = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Daten_Programm/img"  # Pfad zum Ordner mit den Bildern
     model_folder = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Daten_Programm/model"  # Pfad zum Ordner mit den Modell-Dateien
-    new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Daten_Programm/img/bed/0001.png"  
-
+    
+    new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Test/bed/0001.png"
+    new_image_model_file = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Test/bed/3d_keypoints.txt"
+    #new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Test/Tasse/0001.jpg"
+    #new_image_model_file = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Test/Tasse/3d_keypoints.txt"
+    
     print("--- trainingsdaten erstellen")
     X_train, y_train = load_data(image_folder, model_folder)
     print("--- trainingsdaten erfolgreich erstellen")
@@ -149,12 +173,12 @@ if __name__ == "__main__":
 
     model.summary()
 
-    train_model(model, X_train, y_train, epochs=50, batch_size=32)
+    train_model(model, X_train, y_train, epochs=500, batch_size=128)
     print("--- model erfolgreich trainiert")
     
     # Speichere das Modell
     model.save('3d_reconstruction_model_nn.keras')
-    print("--- Model saved!")
+    print("--- Modell erfolgreich trainiert und gespeichert")
 
     # Vorhersage eines neuen Bildes
     print("--- prediction new picture as a test")
@@ -173,15 +197,41 @@ if __name__ == "__main__":
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(x, y, z)
     ax.set_title("Predicted 3D Point Cloud")
-    plt.show()
-##############################################
+    # plt.show()
 
     points = predicted_3d_points.reshape(-1, 3)
-    save_to_ply(points, "predicted_model.ply")
+##############################################
+    # save_to_ply(points, "predicted_model.ply")
     
     # Mit Trimesh anzeigen
     point_cloud = trimesh.points.PointCloud(points)
     point_cloud.show()
 
+##############################################
+    predicted_3d_points = predicted_3d_points.reshape(-1, 3)
+    # Echte 3D-Punktwolke des Testbildes laden
     
+    ground_truth_3d_points = load_3d_points_for_test(new_image_model_file)
+    ground_truth_3d_points = ground_truth_3d_points.reshape(-1,3)
+    
+    #ground_truth_3d_points = y_train[0].reshape(-1, 3)  # Ground-Truth aus den Trainingsdaten
+    # Normalisieren
+    predicted_3d_points = normalize_point_cloud(predicted_3d_points)
+    ground_truth_3d_points = normalize_point_cloud(ground_truth_3d_points)
 
+
+# Chamfer Distance berechnen
+    cd = chamfer_distance(predicted_3d_points, ground_truth_3d_points)
+    print(f"Chamfer Distance: {cd}")
+
+    predicted_3d_points = np.array(predicted_3d_points)  # Beispielhafte Vorhersage
+    ground_truth_3d_points = np.array(ground_truth_3d_points)  # Beispielhafte Ground Truth
+
+    
+    iou = intersection_over_union(predicted_3d_points, ground_truth_3d_points)
+    emd = earth_movers_distance(predicted_3d_points, ground_truth_3d_points)
+    hausdorff = hausdorff_distance(predicted_3d_points, ground_truth_3d_points)
+
+    print(f"IoU: {iou}")
+    print(f"EMD: {emd}")
+    print(f"Hausdorff Distance: {hausdorff}")
