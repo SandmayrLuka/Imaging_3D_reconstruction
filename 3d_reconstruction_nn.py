@@ -13,8 +13,8 @@ from mpl_toolkits.mplot3d import Axes3D
 import trimesh
 from pyemd import emd
 from scipy.spatial.distance import cdist
-
 from evaluation_functions import chamfer_distance, intersection_over_union, earth_movers_distance, hausdorff_distance, normalize_point_cloud
+from test_data import test_dif_predictions, test_dif_predictions_with_mean
 
 def load_image(img_path, target_size=(64, 64)):
     """
@@ -26,7 +26,6 @@ def load_image(img_path, target_size=(64, 64)):
     img_array = image.img_to_array(img)  
     img_array = img_array / 255.0  
     return img_array
-
 
 def load_3d_points(model_folder, object_folder):
     """
@@ -134,80 +133,6 @@ def save_to_ply(points, output_file="output.ply"):
         for point in points:
             f.write(f"{point[0]} {point[1]} {point[2]}\n")
 
-def load_3d_points_for_test(keypoints_file):
-    if os.path.exists(keypoints_file):
-            keypoints = np.loadtxt(keypoints_file)  # loads data from a text file; returns an array containing data from the text file
-
-            expected_num_points = 50  # expected number of 3D points (e.g., 100) [can include in given variables]
-            if keypoints.ndim == 1: # Falls die Daten flach geladen werden
-                keypoints = keypoints.reshape(-1, 3) # Umformen zu (n, 3)
-            
-            if len(keypoints) < expected_num_points: # Pad with zeros if there are fewer points than expected
-                padding = np.zeros((expected_num_points - len(keypoints), keypoints.shape[1]))
-                keypoints = np.vstack([keypoints, padding])#
-            elif len(keypoints) > expected_num_points: # Truncate if there are more points than expected
-                keypoints = keypoints[:expected_num_points]
-            
-            return keypoints.flatten()  # Flatten des Arrays
-
-def test_dif_predictions(new_image_path):
-    for object_folder in os.listdir(new_image_path):
-        object_path = os.path.join(new_image_path, object_folder)
-        if os.path.isdir(object_path):
-            print(f"--- Processing object: {object_folder} ---")
-            
-            # Bildpfad und Modellpfad suchen
-            image_path = None
-            model_path = None
-            
-            for item in os.listdir(object_path):
-                if item.lower().endswith(('.jpg', '.png')):
-                    image_path = os.path.join(object_path, item)
-                elif item == "3d_keypoints.txt":
-                    model_path = os.path.join(object_path, item)
-            
-            if image_path and model_path:
-                # Neues Bild laden
-                new_image = load_image(image_path, target_size=(64, 64))
-                new_image = np.expand_dims(new_image, axis=0)
-                
-                # Vorhersage der 3D-Punkte
-                predicted_3d_points = model.predict(new_image, verbose=0)
-                predicted_3d_points = predicted_3d_points.reshape(-1, 3)
-
-                # Ground-Truth laden
-                ground_truth_3d_points = load_3d_points_for_test(model_path)
-                ground_truth_3d_points = ground_truth_3d_points.reshape(-1, 3)
-
-                # Normalisieren
-                predicted_3d_points = normalize_point_cloud(predicted_3d_points)
-                ground_truth_3d_points = normalize_point_cloud(ground_truth_3d_points)
-
-                # Metriken berechnen
-                cd = chamfer_distance(predicted_3d_points, ground_truth_3d_points)
-                iou = intersection_over_union(predicted_3d_points, ground_truth_3d_points)
-                emd = earth_movers_distance(predicted_3d_points, ground_truth_3d_points)
-                hausdorff = hausdorff_distance(predicted_3d_points, ground_truth_3d_points)
-
-                # Ausgabe der Ergebnisse
-                print(f"Results for {object_folder}:")
-                print(f"  Chamfer Distance: {cd}")
-                print(f"  IoU: {iou}")
-                print(f"  Earth Mover's Distance: {emd}")
-                print(f"  Hausdorff Distance: {hausdorff}")
-                print()
-
-                # Optional: 3D-Plot
-                #fig = plt.figure()
-                #ax = fig.add_subplot(111, projection='3d')
-                #ax.scatter(predicted_3d_points[:, 0], predicted_3d_points[:, 1], predicted_3d_points[:, 2], label='Predicted')
-                #ax.scatter(ground_truth_3d_points[:, 0], ground_truth_3d_points[:, 1], ground_truth_3d_points[:, 2], label='Ground Truth', alpha=0.6)
-                #ax.set_title(f"3D Comparison: {object_folder}")
-                #ax.legend()
-                #plt.show()
-            else:
-                print(f"  Missing image or 3D model for {object_folder}.")
-
 # Hauptblock zum Ausführen des Codes
 if __name__ == "__main__":
     image_folder = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Daten_Programm/img"  # Pfad zum Ordner mit den Bildern
@@ -235,8 +160,10 @@ if __name__ == "__main__":
 
 ##### Neue Bilder #####
     # Der folgende Ordner enthält mehrer Subordner (einen/pro_objektart) mit jeweils einem Foto und einem 3D Modell
-    new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Testdaten"
-    test_dif_predictions(new_image_path)
+    new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Github/Imaging_3D_reconstruction/Testdaten"
+    test_dif_predictions(new_image_path, model)
+    new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Github/Imaging_3D_reconstruction/Testdaten_bed"
+    test_dif_predictions_with_mean(new_image_path, model)
 
 
     # save_to_ply(points, "predicted_model.ply")
