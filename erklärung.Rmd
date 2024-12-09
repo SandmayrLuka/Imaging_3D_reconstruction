@@ -1,0 +1,46 @@
+---
+title: "Erklärung"
+author: "Gruppe Sandmayr, Trausner, Ünal"
+date: "2024-12-09"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Metrics
+
+## Chamfer distance
+Chamfer distance is a metric used to evaluate the similarity between two sets of points. 
+Given two point sets A and B, the chamfer distance is defined as the sum of the distances from each point in A to its nearest neighbor in B, plus the sum of the distances from each point in B to its nearest neighbor in A.
+
+Formula: For any two point sets $A,B \subset \mathbb{R}^d$ of sizes up to n, The Chamfer distance from A to B is defined as 
+  
+$CH(A,B) = \sum_{a \in A}{\min_{b \in B} d_X(a,b)}$
+
+## Hausdorff distance
+Die Hausdorff-Metrik misst den Abstand zwischen nichtleeren kompakten Teilmengen A und B.
+
+Formula: Let $(M,d)$ be a metric space. for each pair of non-empty subsets $X \subset M$ and $Y \subset M$, the Hausdorff distance between X and Y is defined as
+
+$d_H(X,Y) := max\{\sup_{x \in X}d(x,Y), \sup_{y \in Y}d(X,y)\}$
+
+## Intersection over Union
+Der Jaccard-Index (oder Intersection over Union) ist eine Kennzahl für die Ähnlichkeit von Mengen. Um den Jaccard-Koeffizienten zweier Mengen zu berechnen, teilt man die Anzahl der gemeinsamen Elemente (Schnittmenge) durch die Größe der Vereinigungsmenge:
+
+Formula: 
+
+$J(A,B) = \frac{|A \cap B|}{|A \cup B|}$
+
+## EMD
+Die Earth-Mover's-Metrik ist eine Metrik zwischne Wahrscheinlichkeitsmaßen auf einem gegebenen metrischen Raum.
+Intuitiv kann man sich vorstellen: Wenn jede Verteilung als ein Haufen von "Erde" angehäuft auf dem metrischen Raum betrachtet wird, dann beschreibt diese Metrik die minimalen Kosten der Umwandlung eines Haufens in den anderen
+
+Formula: The EMD between probability distributions $P$ and $Q$ can be defined as an infimum over joint probabilities: 
+
+$EMD(P,Q) = \inf_{\gamma \in \Pi(P,Q)} E_{x,y \sim \gamma} [d(x,y)]$
+
+
+
+
