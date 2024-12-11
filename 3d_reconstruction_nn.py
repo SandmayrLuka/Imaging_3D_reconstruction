@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
     model.summary()
 
-    train_model(model, X_train, y_train, epochs=50, batch_size=128)
+    train_model(model, X_train, y_train, epochs=100, batch_size=128)
     print("--- model erfolgreich trainiert")
     print()
     
@@ -168,8 +168,13 @@ if __name__ == "__main__":
 
     # save_to_ply(points, "predicted_model.ply")
     # Mit Trimesh anzeigen
-    # point_cloud = trimesh.points.PointCloud(points)
-    # point_cloud.show()
+    new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Daten_Programm/img/bed/0001.png"
+    new_image = load_image(new_image_path, target_size=(64, 64))
+    new_image = np.expand_dims(new_image, axis=0)
+    predicted_3d_points = model.predict(new_image)
+    points = predicted_3d_points.reshape(-1, 3)
+    point_cloud = trimesh.points.PointCloud(points)
+    point_cloud.show()
 
 
     
