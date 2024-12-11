@@ -17,7 +17,7 @@ Given two point sets A and B, the chamfer distance is defined as the sum of the 
 
 Formula: For any two point sets $A,B \subset \mathbb{R}^d$ of sizes up to n, The Chamfer distance from A to B is defined as 
   
-$CH(A,B) = \sum_{a \in A}{\min_{b \in B} d_X(a,b)}$
+$CH(A,B) = \frac{1}{|A|} \sum_{a \in A}{\min_{b \in B} d_X(a,b)} + \frac{1}{|B|} \sum_{b \in B}{\min_{a \in A} d_X(a,b)}$
 
 ## Hausdorff distance
 Die Hausdorff-Metrik misst den Abstand zwischen nichtleeren kompakten Teilmengen A und B.

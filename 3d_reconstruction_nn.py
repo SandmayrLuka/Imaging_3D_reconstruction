@@ -170,3 +170,6 @@ if __name__ == "__main__":
     # Mit Trimesh anzeigen
     # point_cloud = trimesh.points.PointCloud(points)
     # point_cloud.show()
+
+
+    
