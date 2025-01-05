@@ -175,7 +175,7 @@ def merge_heightmap_with_color(image_path, height_map, crop=10, scale=1):
 # Example usage
 
 #img_path = "/Users/sarahtrausner/Desktop/Master/Semester 3/Imaging beyond consumer cameras/PS/Tests/surface_reflection/dome.png"
-img_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Github/Imaging_3D_reconstruction/Sarah/dome.png"
+img_path = "C:/Users/User/dome.png"
 
 # Displaying mask
 image_with_no_background = remove_white_background(img_path)
