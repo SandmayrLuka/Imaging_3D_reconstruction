@@ -5,17 +5,21 @@
 import os
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
+import trimesh
+
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Flatten, Input
-import matplotlib.pyplot as plt
+from tensorflow.keras.layers import Conv2D, MaxPooling2D
 from PIL import Image
 from mpl_toolkits.mplot3d import Axes3D
-import trimesh
 from pyemd import emd
 from scipy.spatial.distance import cdist
+
 from evaluation_functions import chamfer_distance, intersection_over_union, earth_movers_distance, hausdorff_distance, normalize_point_cloud
 from test_data import test_dif_predictions, test_dif_predictions_with_mean
+
 
 def load_image(img_path, target_size=(64, 64)):
     """
@@ -104,11 +108,15 @@ def create_model(input_shape, output_size):
     Ausgabe: Eine flache Liste von 3D-Koordinaten für die Punktwolke
     """
     model = Sequential([
-        Input(shape = input_shape),
-        Flatten(), # Flatten der Eingabebilder
-        Dense(512, activation='relu'),  
-        Dense(256, activation='relu'), 
-        Dense(128, activation='relu'), 
+        Input(shape=input_shape),
+        Conv2D(32, (3, 3), activation='relu', padding='same'),
+        MaxPooling2D(pool_size=(2, 2)),
+        Conv2D(64, (3, 3), activation='relu', padding='same'),
+        MaxPooling2D(pool_size=(2, 2)),
+        Flatten(),
+        Dense(512, activation='relu'),
+        Dense(256, activation='relu'),
+        Dense(128, activation='relu'),
         Dense(output_size, activation='linear')
     ])
 
@@ -187,6 +195,15 @@ if __name__ == "__main__":
     point_cloud = trimesh.points.PointCloud(points)
     point_cloud.show()
 
+    # Bookcase
+    new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Daten_Programm/img/bookcase/0002.jpg"
+    new_image = load_image(new_image_path, target_size=(64, 64))
+    new_image = np.expand_dims(new_image, axis=0)
+    predicted_3d_points = model.predict(new_image)
+    points = predicted_3d_points.reshape(-1, 3)
+    point_cloud = trimesh.points.PointCloud(points)
+    point_cloud.show()
+    
     # Chair
     new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Daten_Programm/img/chair/0001.png"
     new_image = load_image(new_image_path, target_size=(64, 64))
@@ -196,6 +213,13 @@ if __name__ == "__main__":
     point_cloud = trimesh.points.PointCloud(points)
     point_cloud.show()
 
-
-
+    # desk
+    new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Daten_Programm/img/desk/0001.jpg"
+    new_image = load_image(new_image_path, target_size=(64, 64))
+    new_image = np.expand_dims(new_image, axis=0)
+    predicted_3d_points = model.predict(new_image)
+    points = predicted_3d_points.reshape(-1, 3)
+    point_cloud = trimesh.points.PointCloud(points)
+    point_cloud.show()
+    
     
