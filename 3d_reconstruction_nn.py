@@ -9,6 +9,7 @@ from tensorflow.keras.preprocessing import image
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Flatten, Input
 import matplotlib.pyplot as plt
+from PIL import Image
 from mpl_toolkits.mplot3d import Axes3D
 import trimesh
 from pyemd import emd
@@ -22,12 +23,14 @@ def load_image(img_path, target_size=(64, 64)):
     takes img_path (and target_size = (64,64))
     return array of img
     """
-    img = image.load_img(img_path, target_size=target_size) 
-    img_array = image.img_to_array(img)  
-    img_array = img_array / 255.0  
+    img = Image.open(img_path).convert("RGBA")  # Konvertiere zu RGBA, falls Transparenz vorhanden
+    img = img.resize(target_size)  # Größe anpassen
+    img_array = image.img_to_array(img)  # Bild in Array konvertieren
+    img_array = img_array[:, :, :3]  # Nur RGB-Kanäle behalten
+    img_array = img_array / 255.0  # Normalisieren
     return img_array
 
-def load_3d_points(model_folder, object_folder):
+def load_3d_points(model_folder, object_folder, num_points=10000):
     """
     Durchsuche alle Unterordner, bis ich die erste Datei mit dem Namen "3d_keypoints.txt" finde; die anderen lade ich nicht
     takes model folder and object_folder
@@ -37,23 +40,29 @@ def load_3d_points(model_folder, object_folder):
     
     for subfolder in os.listdir(object_model_folder):
         subfolder_path = os.path.join(object_model_folder, subfolder)
-        #keypoints_file = os.path.join(subfolder_path, "3d_keypoints.txt")
-        keypoints_file = os.path.join(subfolder_path, "point_cloud.txt")
-        
-        if os.path.exists(keypoints_file):
-            keypoints = np.loadtxt(keypoints_file)  # loads data from a text file; returns an array containing data from the text file
+        point_cloud_file = os.path.join(subfolder_path, "point_cloud.txt")
+        model_file = os.path.join(subfolder_path, "model.obj")
 
-            expected_num_points = 1000  # expected number of 3D points (e.g., 100) [can include in given variables]
-            if keypoints.ndim == 1: # Falls die Daten flach geladen werden
-                keypoints = keypoints.reshape(-1, 3) # Umformen zu (n, 3)
+        expected_num_points = 10000
+        
+        if os.path.exists(point_cloud_file):
+            print(f"Lade vorhandene Punktwolke aus: {point_cloud_file}")
+            keypoints = np.loadtxt(point_cloud_file)
+        elif os.path.exists(model_file):
+            print(f"Generiere Punktwolke aus: {model_file}")
+            keypoints = generate_point_cloud_from_mesh(model_file, num_points)
+            np.savetxt(point_cloud_file, keypoints, fmt="%.6f")
+            print(f"Punktwolke gespeichert in: {point_cloud_file}")
+        else:
+            raise FileNotFoundError(f"Weder Punktwolke noch Modell gefunden in {subfolder_path}")
+        
+        if len(keypoints) < expected_num_points: # Pad with zeros if there are fewer points than expected
+            padding = np.zeros((expected_num_points - len(keypoints), keypoints.shape[1]))
+            keypoints = np.vstack([keypoints, padding])#
+        elif len(keypoints) > expected_num_points: # Truncate if there are more points than expected
+            keypoints = keypoints[:expected_num_points]
             
-            if len(keypoints) < expected_num_points: # Pad with zeros if there are fewer points than expected
-                padding = np.zeros((expected_num_points - len(keypoints), keypoints.shape[1]))
-                keypoints = np.vstack([keypoints, padding])#
-            elif len(keypoints) > expected_num_points: # Truncate if there are more points than expected
-                keypoints = keypoints[:expected_num_points]
-            
-            return keypoints.flatten()  # Flatten des Arrays
+        return keypoints.flatten()  # Flatten des Arrays
     
     raise FileNotFoundError(f"3D keypoints file not found in any subfolder of {object_model_folder}")
 
@@ -82,7 +91,8 @@ def load_data(image_folder, model_folder):
                     point_clouds.append(point_cloud)
 
     X_train = np.array([load_image(img_path) for img_path in image_paths])
-    y_train = np.array(point_clouds)
+    #y_train = np.array(point_clouds)
+    y_train = np.array(point_clouds).reshape(len(point_clouds), -1)  # Punktwolken flach machen
     return X_train, y_train
 
 def create_model(input_shape, output_size):

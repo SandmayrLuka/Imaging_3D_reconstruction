@@ -90,9 +90,29 @@ def determine_taper_directions(edges):
     taper_direction_x = 1 if right_edges > left_edges else -1 # horizontal tapering
     taper_direction_y = 1 if bottom_edges > top_edges else -1 # vertical tapering
 
-    # TODO @Sarah: hier hann man auch noch eine Gewichtung einbauen (taper_strength zusätzlich für beide mitgeben)
+    print(f"edge counts: left_edges={left_edges}, right_edges={right_edges}, top_edges={top_edges}, bottom_edges={bottom_edges}")
+    print(f"edge counts differences: left-right={abs(right_edges- left_edges)}, top-bottom={abs(top_edges- bottom_edges)}")
 
-    return taper_direction_x, taper_direction_y
+
+    """ # failed
+    if abs(right_edges- left_edges)>15:
+        taper_direction_x = 0
+
+    if abs(top_edges- bottom_edges)>15:
+        taper_direction_y = 0
+    """
+
+    # weighting
+    taper_factor_x = abs(right_edges- left_edges)
+    taper_factor_y = abs(top_edges- bottom_edges)
+    sum = taper_factor_x + taper_factor_y
+    taper_factor_x = taper_factor_x/sum
+    taper_factor_y = taper_factor_y/sum
+
+    print(f"taper factors (weighting): taper_factor_x={taper_factor_x}, taper_factor_y={taper_factor_y}")
+
+
+    return taper_direction_x, taper_direction_y, taper_factor_x, taper_factor_y
 
 def shape_from_taper(image_path, max_depth=255, taper_factor_x=1, taper_factor_y=1):
     """
@@ -106,7 +126,7 @@ def shape_from_taper(image_path, max_depth=255, taper_factor_x=1, taper_factor_y
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     edges = cv2.Canny(image, 100, 200)  # Canny edge detector -> detect edges
 
-    taper_direction_x, taper_direction_y = determine_taper_directions(edges)
+    taper_direction_x, taper_direction_y, taper_factor_x, taper_factor_y = determine_taper_directions(edges)
     print(f"Taper Directions: Horizontal={taper_direction_x}, Vertical={taper_direction_y}")
     print(f"Taper Factor: Horizontal={taper_factor_x}, Vertical={taper_factor_y}")
     print(taper_factor_x * taper_direction_x)
@@ -262,6 +282,6 @@ plt.title('Masked Heat Map of Height - smoothed normalized masked height map')
 plt.axis('off')
 plt.show()
 
-merge_heightmap_with_color(img_path, masked_height_map, crop=10, scale=10)
-merge_heightmap_with_color(img_path, normalized_heatmap, crop=10, scale=10)
+# merge_heightmap_with_color(img_path, masked_height_map, crop=10, scale=10)
+# merge_heightmap_with_color(img_path, normalized_heatmap, crop=10, scale=10)
 merge_heightmap_with_color(img_path, smoothed_heatmap, crop=10, scale=10)

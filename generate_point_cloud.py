@@ -57,20 +57,17 @@ def save_point_cloud_to_txt(points, output_file):
     np.savetxt(output_file, points, fmt="%.6f", delimiter=" ", header="x y z", comments='')
 
 
-
-#file_path = "path/to/your/3d_model.glb"  # Pfad zur .glb oder .obj-Datei
-#file_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Github/Imaging_3D_reconstruction/cone/cone.glb"
 file_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Daten_Programm/model/bed/IKEA_FJELLSE_2/model.obj"
 output_file = "point_cloud.txt"  # Name der Ausgabedatei
 num_points = 10000  # Anzahl der Punkte in der Punktwolke
 
 # Punktwolke generieren
-point_cloud = generate_point_cloud_from_mesh(file_path, num_points)
+#point_cloud = generate_point_cloud_from_mesh(file_path, num_points)
 
 # Punktwolke visualisieren
-visualize_point_cloud(point_cloud)
+#visualize_point_cloud(point_cloud)
 
 # Punktwolke in Datei speichern
-save_point_cloud_to_txt(point_cloud, output_file)
+#save_point_cloud_to_txt(point_cloud, output_file)
 
-print(f"Punktwolke erfolgreich in '{output_file}' gespeichert.")
+#print(f"Punktwolke erfolgreich in '{output_file}' gespeichert.")
