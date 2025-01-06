@@ -221,5 +221,14 @@ if __name__ == "__main__":
     points = predicted_3d_points.reshape(-1, 3)
     point_cloud = trimesh.points.PointCloud(points)
     point_cloud.show()
+
+    # sofa
+    new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging//0006.png"
+    new_image = load_image(new_image_path, target_size=(64, 64))
+    new_image = np.expand_dims(new_image, axis=0)
+    predicted_3d_points = model.predict(new_image)
+    points = predicted_3d_points.reshape(-1, 3)
+    point_cloud = trimesh.points.PointCloud(points)
+    point_cloud.show()
     
     
