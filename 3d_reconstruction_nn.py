@@ -19,6 +19,7 @@ from scipy.spatial.distance import cdist
 
 from evaluation_functions import chamfer_distance, intersection_over_union, earth_movers_distance, hausdorff_distance, normalize_point_cloud
 from test_data import test_dif_predictions, test_dif_predictions_with_mean
+from generate_point_cloud import generate_point_cloud_from_mesh
 
 
 def load_image(img_path, target_size=(64, 64)):
@@ -186,7 +187,7 @@ if __name__ == "__main__":
 
 
     # save_to_ply(points, "predicted_model.ply")
-    # Mit Trimesh anzeigen
+    # bed
     new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Daten_Programm/img/bed/0001.png"
     new_image = load_image(new_image_path, target_size=(64, 64))
     new_image = np.expand_dims(new_image, axis=0)

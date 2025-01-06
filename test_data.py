@@ -43,7 +43,7 @@ def test_dif_predictions(new_image_path, model):
             for item in os.listdir(object_path):
                 if item.lower().endswith(('.jpg', '.png')):
                     image_path = os.path.join(object_path, item)
-                elif item == "3d_keypoints.txt":
+                elif item == "point_cloud.txt":
                     model_path = os.path.join(object_path, item)
             
             if image_path and model_path:
@@ -56,8 +56,8 @@ def test_dif_predictions(new_image_path, model):
                 predicted_3d_points = predicted_3d_points.reshape(-1, 3)
 
                 # Ground-Truth laden
-                ground_truth_3d_points = load_3d_points_for_test(model_path)
-                ground_truth_3d_points = ground_truth_3d_points.reshape(-1, 3)
+                ground_truth_3d_points = load_3d_points_for_test(model_path)  # Lade die Ground-Truth
+                ground_truth_3d_points = ground_truth_3d_points.reshape(-1, 3)  # Reshapen der Ground-Truth
 
                 # Normalisieren
                 predicted_3d_points = normalize_point_cloud(predicted_3d_points)
@@ -88,15 +88,16 @@ def test_dif_predictions(new_image_path, model):
             else:
                 print(f"  Missing image or 3D model for {object_folder}.")
 
+
 def test_dif_predictions_with_mean(new_image_path, model):
     """
-    Berechnet die Metriken für alle Bilder in einem Ordner basierend auf einer gemeinsamen `keypoints.txt`-Datei.
+    Berechnet die Metriken für alle Bilder in einem Ordner basierend auf einer gemeinsamen `point_cloud.txt`-Datei.
     Gibt den Mittelwert der Metriken aus.
     """
     # Pfad zur Keypoints-Datei
-    keypoints_path = os.path.join(new_image_path, "3d_keypoints.txt")
+    keypoints_path = os.path.join(new_image_path, "point_cloud.txt")
     if not os.path.exists(keypoints_path):
-        print("Error: 3d_keypoints.txt not found in the folder.")
+        print("Error: point_cloud.txt not found in the folder.")
         return
 
     # Lade und normalisiere die Ground-Truth-Punkte
