@@ -42,5 +42,103 @@ Formula: The EMD between probability distributions $P$ and $Q$ can be defined as
 $EMD(P,Q) = \inf_{\gamma \in \Pi(P,Q)} E_{x,y \sim \gamma} [d(x,y)]$
 
 
+# surface_reflection.py
+Von der Sarah angefertigt.
+## Funktion remove_white_background
+Entfernt den weißen Hintergrund eines Bildes und ersetzt ihn durch Schwarz
+1) Bild einlesen: als Graustufenbild
+2) Maske erstellen, die alle Pixel markiert, deren Intensität unter einem bestimmten Schwellenwert liegt
+3) Maske anwenden (alle Pixel, die nicht zur Maske gehören, werden auf 0 gesetzt)
+4) Ergebnis zurückgeben (Gibt das Bild mit entfernten weißen Hintergrund zurück)
+
+## Funktion save_white_background_mask
+Erstellt und speichert eine Maske, die den weißen Hintergrund identifiziert
+1) Bild einlesen als Graustufenbild
+2) Maske erstellen: alle Pixel mit einer Intensität größer oder gleich dem Schwellenwert (treshold) werden al Hintergrund weiß markiert
+3) Maske speichern (optional)
+4) Ergebnis zurückgeben als boolean Array
+
+## Funktion apply_mask_to_heatmap
+Wendet eine Maske auf eine Höhenkarte (Heatmap) an und setzt alle maskierten Pixel auf 0
+1) Kopie der Heatmap erstellen: originale Heatmap wird kopiert
+2) Maske anwenden: Alle Pixel in der Heatmap, die durch die Maske als Hintergrund (true) markiert sind, werden auf 0 gesetzt
+3) Ergebnis zurückgeben
+
+## Funktion shape_from_shading:
+Berechnet eine Höhenkarte aus einem Bild basierend auf der Lichtquelle und der Oberflächenreflexion ("Shape from Shading")
+1) Bild einlesen und normalisieren: Bild wird als Graustufenbild geladen und die Intensitätswerte auf den Bereich [0,1] skaliert
+2) Lichtquelle normalisieren: Richtungsvektor der Lichtquelle wird zu einem Einheitsvektor normiert
+3) Gradienten berechnen: Änderungen der Bildintensität in horizontaler und vertikaler Richtung berechnet
+4) Berechnung der z-Komponente: Basierend auf der Annahme einer Lambert'schen Oberfläche wird die Z-Komponente der Normalvektoren berechnet
+5) Normalvektoren kombinieren und normalisieren
+6) Höhenkarte berechnen
+7) Normalisierung für Anzeige
+8) Ergebnis zurückgeben
+
+## Funktion smooth_heatmap
+Glättet die Höhenkarte, um Rauschen und Verzerrungen zu reduzieren
+1) Kernelgröße validieren
+2) Gaußsche Glättung anwenden
+3) Ergebnis anzeigen
+
+## Funktion merge_heightmap_with_color
+Erstellt eine 3D-Visualisierung, indem die Höhenkarte mit den Farbinformationen des Bildes kombiniert wird
+1) Farbbild einlesen
+2) Größe anpassen
+3) Randbereiche abschneiden, um Verzerrungen zu vermeiden
+4) 3D-Gitter erstellen
+5) Höhenwerte skalieren
+6) 3D Oberfläche zeichnen
+7) Visualisierung anzeigen (3D Modell)
+
+## Hauptprogramm:
+1) Entfernt den weißen Hintergrund aus dem Bild.
+2) Erstellt eine Höhenkarte mit der Funktion shape_from_shading.
+3) Maskiert die Höhenkarte.
+4) Normalisiert und glättet die maskierte Höhenkarte.
+5) Visualisiert die Ergebnisse als 3D-Modell.
+
+# tapert_surface.py
+Von der Sarah
+## Funktion save_white_background_mask
+Erstellt eine Maske, die weißen Hintergrund markiert, und speichert diese als Bilddatei.
+1) Pixel mit Intensität über dem treshold werden als Hintergrund markiert
+2) Die Maske kann optional gespeichert werden
+
+## Funktion apply_mask_to_heatmap
+Markiert eine Heatmap, sodass Hintergrundbereiche auf 0 gesetzt werden
+
+## Funktion determine_taper_directions
+Bestimmt, in welche Richtung sich das Objekt verjüngt
+1) Kantenanalyse: Zählt die Anzahl der Kantenpixel in den linken/rechten und oberen/unteren Bildhälften
+2) Basierend auf den Ergebnissen wird die Verjüngungsrichtung berechnet
+
+## Funktion shape_from_taper
+Erstellt eine Tiefenkarte (Heatmap), basierend auf den Verjüngungsrichtungen
+1) Lädt das Bild und extrahiert Kanten
+2) Bestimmt die Verjüngungsrichtungen
+3) Berechnet die Tiefe für jedes Pixel basierend auf den Positionen und den Verjüngungsrichtungen
+
+## Funktion smooth_heatmap
+Reduziert Artifakte und glättet die Heatmap
+1) Wendet einen Gaußschen Filter an, um Kanten zu glätten
+
+## Funktion merge_heightmap_with_color
+Erstellt eine 3D-Darstellung der Oberfläche, wobei die Höhenkarte mit Farbinformationen kombiniert wird
+
+# Recherche: Shape from Shading Ansatz für 3D-Rekonstruktion
+Grundidee: Helligkeit eines Pixels in einem Bild hängt von mehreren Faktoren ab:
+
+* Lichtquelle: Richtung und Intensität
+* Oberflächenneigung: Wie stark die Oberfläche geneigt ist
+* Reflektionsmodell: Wie das Licht von der Oberfläche reflektiert wird (Lambert Gesetz)
+
+Ziel von SFS ist es, aus der Helligkeitsverteilung im Bild die Oberflächennormalen und daraus die Höheninformationen (Depth Map) zu berechnen
+
+Schritte der SFS-3D-Rekonstruktion
+a) Kanten und Oberflächenmerkmale extrahieren: 
+b) Reflexionsmodell und Beleuchtung berücksichtigen
+c) Oberflächennormalen berechnen
+d) Integration der Steigung
 
 

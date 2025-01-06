@@ -37,12 +37,13 @@ def load_3d_points(model_folder, object_folder):
     
     for subfolder in os.listdir(object_model_folder):
         subfolder_path = os.path.join(object_model_folder, subfolder)
-        keypoints_file = os.path.join(subfolder_path, "3d_keypoints.txt")
-
+        #keypoints_file = os.path.join(subfolder_path, "3d_keypoints.txt")
+        keypoints_file = os.path.join(subfolder_path, "point_cloud.txt")
+        
         if os.path.exists(keypoints_file):
             keypoints = np.loadtxt(keypoints_file)  # loads data from a text file; returns an array containing data from the text file
 
-            expected_num_points = 50  # expected number of 3D points (e.g., 100) [can include in given variables]
+            expected_num_points = 1000  # expected number of 3D points (e.g., 100) [can include in given variables]
             if keypoints.ndim == 1: # Falls die Daten flach geladen werden
                 keypoints = keypoints.reshape(-1, 3) # Umformen zu (n, 3)
             
