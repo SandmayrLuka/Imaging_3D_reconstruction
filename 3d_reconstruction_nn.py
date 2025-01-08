@@ -7,6 +7,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import trimesh
+import random
 
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.models import Sequential
@@ -35,41 +36,44 @@ def load_image(img_path, target_size=(64, 64)):
     img_array = img_array / 255.0  # Normalisieren
     return img_array
 
+
 def load_3d_points(model_folder, object_folder, num_points=10000):
     """
-    Durchsuche alle Unterordner, bis ich die erste Datei mit dem Namen "3d_keypoints.txt" finde; die anderen lade ich nicht
-    takes model folder and object_folder
-    return array of img
+    Läd alle Punktwolken aus einer Kategorie und gibt eine zufällig ausgewählte zurück.
     """
     object_model_folder = os.path.join(model_folder, object_folder)
-    
+    point_clouds = []
+
     for subfolder in os.listdir(object_model_folder):
         subfolder_path = os.path.join(object_model_folder, subfolder)
         point_cloud_file = os.path.join(subfolder_path, "point_cloud.txt")
         model_file = os.path.join(subfolder_path, "model.obj")
 
         expected_num_points = 10000
-        
+
         if os.path.exists(point_cloud_file):
-            print(f"Lade vorhandene Punktwolke aus: {point_cloud_file}")
             keypoints = np.loadtxt(point_cloud_file)
         elif os.path.exists(model_file):
             print(f"Generiere Punktwolke aus: {model_file}")
             keypoints = generate_point_cloud_from_mesh(model_file, num_points)
             np.savetxt(point_cloud_file, keypoints, fmt="%.6f")
-            print(f"Punktwolke gespeichert in: {point_cloud_file}")
         else:
-            raise FileNotFoundError(f"Weder Punktwolke noch Modell gefunden in {subfolder_path}")
-        
+            continue  # Falls kein Modell oder Punktwolke vorhanden ist
+
+        # Punktwolke normalisieren und sicherstellen, dass die richtige Punktanzahl vorliegt
         if len(keypoints) < expected_num_points: # Pad with zeros if there are fewer points than expected
             padding = np.zeros((expected_num_points - len(keypoints), keypoints.shape[1]))
             keypoints = np.vstack([keypoints, padding])#
         elif len(keypoints) > expected_num_points: # Truncate if there are more points than expected
             keypoints = keypoints[:expected_num_points]
-            
-        return keypoints.flatten()  # Flatten des Arrays
+
+        point_clouds.append(keypoints.flatten())
     
-    raise FileNotFoundError(f"3D keypoints file not found in any subfolder of {object_model_folder}")
+    if not point_clouds:
+        raise FileNotFoundError(f"Keine Punktwolken in {object_model_folder} gefunden.")
+    
+    # Zufällige Punktwolke aus der Kategorie auswählen
+    return random.choice(point_clouds)
 
 
 def load_data(image_folder, model_folder):
@@ -81,23 +85,18 @@ def load_data(image_folder, model_folder):
     image_paths = []  
     point_clouds = []
 
-    # Durchlaufe alle Objekte (z. B. 'bed', 'chair', etc.)
     for object_folder in os.listdir(image_folder):
         object_image_folder = os.path.join(image_folder, object_folder)
-        object_model_folder = os.path.join(model_folder, object_folder)
-
-        if os.path.isdir(object_image_folder) and os.path.isdir(object_model_folder):
-            point_cloud = load_3d_points(model_folder, object_folder)  # Laden der 3D-Punkte für das Objekt
-            # Lade Bilder für das Objekt
+        if os.path.isdir(object_image_folder):
             for img_name in os.listdir(object_image_folder):
                 img_path = os.path.join(object_image_folder, img_name)
                 if img_path.lower().endswith(('.jpg', '.png')):
                     image_paths.append(img_path)
-                    point_clouds.append(point_cloud)
+                    # Zufällige Punktwolke für jedes Bild auswählen
+                    point_clouds.append(load_3d_points(model_folder, object_folder))
 
     X_train = np.array([load_image(img_path) for img_path in image_paths])
-    #y_train = np.array(point_clouds)
-    y_train = np.array(point_clouds).reshape(len(point_clouds), -1)  # Punktwolken flach machen
+    y_train = np.array(point_clouds).reshape(len(point_clouds), -1)
     return X_train, y_train
 
 def create_model(input_shape, output_size):
@@ -188,7 +187,7 @@ if __name__ == "__main__":
 
     # save_to_ply(points, "predicted_model.ply")
     # bed
-    new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Daten_Programm/img/bed/0001.png"
+    new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Daten_Programm/img/bed/0068.jpg"
     new_image = load_image(new_image_path, target_size=(64, 64))
     new_image = np.expand_dims(new_image, axis=0)
     predicted_3d_points = model.predict(new_image)
