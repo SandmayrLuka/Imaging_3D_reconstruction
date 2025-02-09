@@ -73,7 +73,8 @@ def load_3d_points(model_folder, object_folder, num_points=10000):
         raise FileNotFoundError(f"Keine Punktwolken in {object_model_folder} gefunden.")
     
     # Zufällige Punktwolke aus der Kategorie auswählen
-    return random.choice(point_clouds)
+    #return random.choice(point_clouds)
+    return point_clouds[1]
 
 
 def load_data(image_folder, model_folder):
@@ -109,10 +110,8 @@ def create_model(input_shape, output_size):
     """
     model = Sequential([
         Input(shape=input_shape),
-        Conv2D(32, (3, 3), activation='relu', padding='same'),
-        MaxPooling2D(pool_size=(2, 2)),
-        Conv2D(64, (3, 3), activation='relu', padding='same'),
-        MaxPooling2D(pool_size=(2, 2)),
+        Conv2D(32, (3, 3), activation='relu', strides=(2, 2), padding='same'),  # Stride ersetzt MaxPooling
+        Conv2D(64, (3, 3), activation='relu', strides=(2, 2), padding='same'),  # Nochmals Stride
         Flatten(),
         Dense(512, activation='relu'),
         Dense(256, activation='relu'),
@@ -205,7 +204,7 @@ if __name__ == "__main__":
     point_cloud.show()
     
     # Chair
-    new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Daten_Programm/img/chair/0001.png"
+    new_image_path = "C:/Users/User/OneDrive - Universität Salzburg/Dokumente/Studium/DataScience/5. Semester/Imaging/Daten_Programm/img/chair/0246.jpg"
     new_image = load_image(new_image_path, target_size=(64, 64))
     new_image = np.expand_dims(new_image, axis=0)
     predicted_3d_points = model.predict(new_image)
